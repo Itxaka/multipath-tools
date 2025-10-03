@@ -3617,7 +3617,6 @@ static void cleanup_pidfile(void)
 	if (pid_fd >= 0)
 		close(pid_fd);
 	condlog(3, "unlink pidfile");
-	unlink(DEFAULT_PIDFILE);
 }
 
 static void cleanup_conf(void) {
@@ -4025,6 +4024,19 @@ child (__attribute__((unused)) void *param)
 	exit_code = 0;
 failed:
 	condlog(2, "multipathd: shut down");
+	
+	/*
+	 * Unlink pidfile before atexit handlers run.
+	 * On musl-based systems, calling unlink() during atexit handler
+	 * execution can cause crashes due to stricter runtime checks.
+	 */
+	if (pid_fd >= 0) {
+		close(pid_fd);
+		condlog(3, "unlink pidfile");
+		unlink(DEFAULT_PIDFILE);
+		pid_fd = -1;
+	}
+	
 	/* All cleanup is done in the cleanup_child() exit handler */
 	return sd_notify_exit(exit_code);
 }
