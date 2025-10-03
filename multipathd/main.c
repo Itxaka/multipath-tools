@@ -3616,7 +3616,6 @@ static void cleanup_pidfile(void)
 {
 	if (pid_fd >= 0)
 		close(pid_fd);
-	condlog(3, "unlink pidfile");
 }
 
 static void cleanup_conf(void) {
